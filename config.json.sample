@@ -1,0 +1,8 @@
+{
+	"rootDirectory": "/Users/alexandr/",
+	"excludeDirectories": [
+		"/Users/alexandr/.Trash/",
+		"/Users/alexandr/Library/",
+		"/Users/alexandr/www/clear_node_modules/"
+	]
+}
