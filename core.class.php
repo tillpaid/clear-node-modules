@@ -38,8 +38,9 @@ class Core
 
 	public function run()
 	{
-		echo 'Scanning...' . PHP_EOL;
-		
+		echo '+============' . PHP_EOL;
+		echo '| Scanning...' . PHP_EOL;
+
 		$this->process($this->rootDirectory);
 		$this->printDirectories();
 
@@ -75,13 +76,29 @@ class Core
 
 	private function printDirectories()
 	{
+		$totalSize = 0;
+
 		if (!empty($this->findedDirectories)) {
+			echo '+------------' . PHP_EOL;
+
 			foreach ($this->findedDirectories as $directory) {
-				echo $directory . PHP_EOL;
+				$size = $this->getDirectorySize($directory);
+				$totalSize += $size;
+				$formatSize = number_format($size, 0, ',', ' ') . "MB";
+
+				echo '| Size: ' . $formatSize . " | " . $directory . PHP_EOL;
 			}
+
+			$formatTotalSize = number_format($totalSize, 0, ',', ' ') . "MB";
+
+			echo '+------------' . PHP_EOL;
+			echo '| Total size: ' . $formatTotalSize . PHP_EOL;
 		} else {
-			echo 'Not found node_modules directories' . PHP_EOL;
+			echo '+------------' . PHP_EOL;
+			echo '| Not found node_modules directories' . PHP_EOL;
 		}
+
+		echo '+============' . PHP_EOL;
 	}
 
 	private function removeDirectories()
@@ -91,5 +108,18 @@ class Core
 				exec('rm -rf ' . $directory);
 			}
 		}
+	}
+
+	private function getDirectorySize($f)
+	{
+		$io = popen('/usr/bin/du -sk ' . $f, 'r');
+		$size = fgets($io, 4096);
+		$size = substr($size, 0, strpos($size, "\t"));
+		pclose($io);
+
+		$size = $size / 1000;
+		$size = ceil($size);
+
+		return $size;
 	}
 }
