@@ -9,6 +9,6 @@ First you must be copy config.json.sample to config.json and set your data. Root
 
 ---
 
-Run utility: *php scan.php* for scannning dirs and listing all finded node_modules dirs.
+Run utility: **php scan.php** for scannning dirs and listing all finded node_modules dirs.
 
-Run for remove: *php remove.php* this command find all node_modules dirs and removed it.
+Run for remove: **php remove.php** this command find all node_modules dirs and removed it.
