@@ -9,6 +9,12 @@ class Core
 
 	private $findedDirectories = [];
 
+	private $borderLength = 0;
+	private $borderOut = '';
+	private $borderIn = '';
+	private $maxPathLength = 0;
+	private $maxSizeLength = 0;
+
 	public function __construct($removeMode = false)
 	{
 		$this->removeMode = $removeMode;
@@ -38,10 +44,12 @@ class Core
 
 	public function run()
 	{
-		echo '+============' . PHP_EOL;
-		echo '| Scanning...' . PHP_EOL;
+		echo '+=============+' . PHP_EOL;
+		echo '| Scanning... |' . PHP_EOL;
+		echo '+=============+' . PHP_EOL;
 
 		$this->process($this->rootDirectory);
+		$this->setBorderLength();
 		$this->printDirectories();
 
 		if ($this->removeMode) {
@@ -62,7 +70,10 @@ class Core
 						if (is_writable($currentDirectory)) {
 							if (is_dir($currentDirectory)) {
 								if ($directory == 'node_modules') {
-									$this->findedDirectories[] = $currentDirectory;
+									$this->findedDirectories[] = [
+										'path' => $currentDirectory,
+										'size' => $this->getDirectorySize($currentDirectory),
+									];
 								} else {
 									$this->process($currentDirectory);
 								}
@@ -74,31 +85,84 @@ class Core
 		}
 	}
 
+	private function setBorderLength()
+	{
+		if (!empty($this->findedDirectories)) {
+			foreach ($this->findedDirectories as $directory) {
+				if (strlen($directory['path']) > $this->maxPathLength) {
+					$this->maxPathLength = strlen($directory['path']);
+				}
+
+				if (strlen($directory['size']) > $this->maxSizeLength) {
+					$this->maxSizeLength = strlen(number_format($directory['size'], 0, ',', ' '));
+				}
+			}
+
+			$this->borderLength = 15;
+			$this->borderLength += $this->maxPathLength;
+			$this->borderLength += $this->maxSizeLength;
+		} else {
+			$this->borderLength = 36;
+		}
+
+		for ($i = 0; $i < $this->borderLength; $i++) {
+			$this->borderIn .= '-';
+			$this->borderOut .= '=';
+		}
+
+		$this->borderIn = "+{$this->borderIn}+";
+		$this->borderOut = "+{$this->borderOut}+";
+	}
+
 	private function printDirectories()
 	{
 		$totalSize = 0;
 
 		if (!empty($this->findedDirectories)) {
-			echo '+------------' . PHP_EOL;
+			echo $this->borderOut . PHP_EOL;
 
 			foreach ($this->findedDirectories as $directory) {
-				$size = $this->getDirectorySize($directory);
-				$totalSize += $size;
-				$formatSize = number_format($size, 0, ',', ' ') . "MB";
+				$totalSize += $directory['size'];
+				$formatSize = number_format($directory['size'], 0, ',', ' ');
+				$formatSizeLength = strlen($formatSize);
 
-				echo '| Size: ' . $formatSize . " | " . $directory . PHP_EOL;
+				$sizeSpaces = '';
+				if ($formatSizeLength < $this->maxSizeLength) {
+					for ($i = $formatSizeLength; $i < $this->maxSizeLength; $i++) {
+						$sizeSpaces .= ' ';
+					}
+				}
+
+				$pathSpaces = '';
+				$pathLength = strlen($directory['path']);
+				if ($pathLength < $this->maxPathLength) {
+					for ($i = $pathLength; $i < $this->maxPathLength; $i++) {
+						$pathSpaces .= ' ';
+					}
+				}
+
+				echo "| Size: {$formatSize}(MB){$sizeSpaces} | {$directory['path']}{$pathSpaces} |" . PHP_EOL;
 			}
 
-			$formatTotalSize = number_format($totalSize, 0, ',', ' ') . "MB";
+			$formatTotalSize = number_format($totalSize, 0, ',', ' ') . "(MB)";
 
-			echo '+------------' . PHP_EOL;
-			echo '| Total size: ' . $formatTotalSize . PHP_EOL;
+			echo $this->borderIn . PHP_EOL;
+
+			$totalSizeSpaces = '';
+			$totalSizeSpacesLength = $this->borderLength - strlen($formatTotalSize) - 14;
+			if ($totalSizeSpacesLength > 0) {
+				for ($i = 0; $i < $totalSizeSpacesLength; $i++) {
+					$totalSizeSpaces .= ' ';
+				}
+			}
+
+			echo "| Total size: {$formatTotalSize}{$totalSizeSpaces} |" . PHP_EOL;
 		} else {
-			echo '+------------' . PHP_EOL;
-			echo '| Not found node_modules directories' . PHP_EOL;
+			echo $this->borderIn . PHP_EOL;
+			echo "| Not found node_modules directories |" . PHP_EOL;
 		}
 
-		echo '+============' . PHP_EOL;
+		echo $this->borderOut . PHP_EOL;
 	}
 
 	private function removeDirectories()
