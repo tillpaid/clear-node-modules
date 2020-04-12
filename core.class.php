@@ -169,7 +169,7 @@ class Core
 	{
 		if (!empty($this->findedDirectories)) {
 			foreach ($this->findedDirectories as $directory) {
-				exec('rm -rf ' . $directory);
+				exec('rm -rf ' . $directory['path']);
 			}
 		}
 	}
